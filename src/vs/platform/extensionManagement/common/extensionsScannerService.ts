@@ -15,7 +15,7 @@ import { Disposable } from 'vs/base/common/lifecycle';
 import { FileAccess, Schemas } from 'vs/base/common/network';
 import * as path from 'vs/base/common/path';
 import * as platform from 'vs/base/common/platform';
-import { basename, isEqual, joinPath } from 'vs/base/common/resources';
+import { basename, isEqual, joinPath, isEqualOrParent } from 'vs/base/common/resources';
 import * as semver from 'vs/base/common/semver/semver';
 import Severity from 'vs/base/common/severity';
 import { isArray, isObject, isString } from 'vs/base/common/types';
@@ -192,7 +192,7 @@ export abstract class AbstractExtensionsScannerService extends Disposable implem
 	async scanExtensionsUnderDevelopment(scanOptions: ScanOptions): Promise<IScannedExtension[]> {
 		if (this.environmentService.isExtensionDevelopment && this.environmentService.extensionDevelopmentLocationURI) {
 			const extensions = (await Promise.all(this.environmentService.extensionDevelopmentLocationURI.filter(extLoc => extLoc.scheme === Schemas.file)
-				.map(async extensionDevelopmentLocationURI => this.extensionsScanner.scanOneOrMultipleExtensions((await this.createExtensionScannerInput(extensionDevelopmentLocationURI, ExtensionType.User, true, scanOptions.language))))))
+				.map(async extensionDevelopmentLocationURI => this.extensionsScanner.scanOneOrMultipleExtensions((await this.createExtensionScannerInput(extensionDevelopmentLocationURI, isEqualOrParent(extensionDevelopmentLocationURI, this.systemExtensionsLocation) ? ExtensionType.System : ExtensionType.User, true, scanOptions.language))))))
 				.flat();
 			return this.applyScanOptions(extensions, scanOptions, true);
 		}
