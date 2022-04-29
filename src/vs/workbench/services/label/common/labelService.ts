@@ -21,8 +21,9 @@ import { LifecyclePhase } from 'vs/workbench/services/lifecycle/common/lifecycle
 import { registerSingleton } from 'vs/platform/instantiation/common/extensions';
 import { IPathService } from 'vs/workbench/services/path/common/pathService';
 import { isProposedApiEnabled } from 'vs/workbench/services/extensions/common/extensions';
-import { OperatingSystem, OS } from 'vs/base/common/platform';
+import { isNative, OperatingSystem, OS } from 'vs/base/common/platform';
 import { IRemoteAgentService } from 'vs/workbench/services/remote/common/remoteAgentService';
+import { Schemas } from 'vs/base/common/network';
 
 const resourceLabelFormattersExtPoint = ExtensionsRegistry.registerExtensionPoint<ResourceLabelFormatter[]>({
 	extensionPoint: 'resourceLabelFormatters',
@@ -109,8 +110,8 @@ export class LabelService extends Disposable implements ILabelService {
 	private readonly _onDidChangeFormatters = this._register(new Emitter<IFormatterChangeEvent>({ leakWarningThreshold: 400 }));
 	readonly onDidChangeFormatters = this._onDidChangeFormatters.event;
 
-	private os = OS;
-	private userHome: URI | undefined = undefined;
+	private os: OperatingSystem;
+	private userHome: URI | undefined;
 
 	constructor(
 		@IWorkbenchEnvironmentService private readonly environmentService: IWorkbenchEnvironmentService,
@@ -120,11 +121,18 @@ export class LabelService extends Disposable implements ILabelService {
 	) {
 		super();
 
-		// Resolve OS & Paths with remote in mind
-		this.resolveEnvironment();
+		// Find some meaningful defaults until the remote environment
+		// is resolved, by taking the current OS we are running in
+		// and by taking the local `userHome` if we run natively on a
+		// local file scheme.
+		this.os = OS;
+		this.userHome = (isNative && pathService.defaultUriScheme === Schemas.file) ? this.pathService.userHome({ preferLocal: true }) : undefined;
+
+		// Remote environment is potentially long running
+		this.resolveRemoteEnvironment();
 	}
 
-	private async resolveEnvironment(): Promise<void> {
+	private async resolveRemoteEnvironment(): Promise<void> {
 
 		// OS
 		const env = await this.remoteAgentService.getEnvironment();

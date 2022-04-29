@@ -57,6 +57,7 @@ export interface IPathService {
 	 * remote's user home directory, otherwise the local one unless
 	 * `preferLocal` is set to `true`.
 	 */
+	userHome(options: { preferLocal: true }): URI;
 	userHome(options?: { preferLocal: boolean }): Promise<URI>;
 
 	/**
@@ -161,7 +162,9 @@ export abstract class AbstractPathService implements IPathService {
 		return Schemas.file;
 	}
 
-	async userHome(options?: { preferLocal: boolean }): Promise<URI> {
+	userHome(options?: { preferLocal: boolean }): Promise<URI>;
+	userHome(options: { preferLocal: true }): URI;
+	userHome(options?: { preferLocal: boolean }): Promise<URI> | URI {
 		return options?.preferLocal ? this.localUserHome : this.resolveUserHome;
 	}
 
