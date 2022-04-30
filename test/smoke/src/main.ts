@@ -218,12 +218,12 @@ async function setupRepository(): Promise<void> {
 	} else {
 		if (!fs.existsSync(workspacePath)) {
 			logger.log('Cloning test project repository...');
-			cp.spawnSync('git', ['clone', testRepoUrl, workspacePath]);
+			cp.spawnSync('git', ['clone', testRepoUrl, workspacePath], { stdio: 'inherit' });
 		} else {
 			logger.log('Cleaning test project repository...');
-			cp.spawnSync('git', ['fetch'], { cwd: workspacePath });
-			cp.spawnSync('git', ['reset', '--hard', 'FETCH_HEAD'], { cwd: workspacePath });
-			cp.spawnSync('git', ['clean', '-xdf'], { cwd: workspacePath });
+			cp.spawnSync('git', ['fetch'], { cwd: workspacePath, stdio: 'inherit' });
+			cp.spawnSync('git', ['reset', '--hard', 'FETCH_HEAD'], { cwd: workspacePath, stdio: 'inherit' });
+			cp.spawnSync('git', ['clean', '-xdf'], { cwd: workspacePath, stdio: 'inherit' });
 		}
 	}
 }
